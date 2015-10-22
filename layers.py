@@ -37,11 +37,11 @@ class LSTM(object):
 		self.forget()
 	
 	def __call__(self, X):
-		V = np.concatenate([X.reshape(1, -1), self.prev_Y, np.ones((1, 1))], axis=1)
+		V = np.concatenate([X, self.prev_Y, np.ones(1)])
 		S = np.dot(V, self.W) 
 		
-		z, i, f, o = np.split(S, 4, axis=1)
-		Z, I, F O = sigmoid(z), np.tanh(i), sigmoid(f), sigmoid(o)
+		z, i, f, o = np.split(S, 4)
+		Z, I, F, O = sigmoid(z), np.tanh(i), sigmoid(f), sigmoid(o)
 		
 		c = Z * I + F * self.prev_c
 		
@@ -54,8 +54,8 @@ class LSTM(object):
 		return Y
 
 	def forget(self):
-		self.prev_c = np.zeros((1, nstates))
-		self.prev_Y = np.zeros((1, nstates))
+		self.prev_c = np.zeros(self.nstates)
+		self.prev_Y = np.zeros(self.nstates)
 
 
 class Dense(object):
@@ -63,9 +63,10 @@ class Dense(object):
 		self.dinput = dinput
 		self.doutput = doutput
 
-		W = np.random.random((dinput + doutput + 1, doutput)) / np.sqrt(dinput + doutput)
+		W = np.random.random((dinput + 1, doutput)) / np.sqrt(dinput + doutput)
 		self.W = W
 
 	
 	def __call__(self, X):
-		return np.dot(X, self.W)
+		V = np.concatenate([X, np.ones(1)])		# things we do for bias
+		return np.dot(V, self.W)
