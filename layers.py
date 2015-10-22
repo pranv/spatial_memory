@@ -34,12 +34,13 @@ class LSTM(object):
 		W[-1, 2 * nstates : 3 * nstates] = fbias
 		self.W = W
 
-		self.forget()
+		self.prev_c = np.zeros(nstates)
+		self.prev_Y = np.zeros(nstates)
 	
 	def __call__(self, X):
 		V = np.concatenate([X, self.prev_Y, np.ones(1)])
 		S = np.dot(V, self.W) 
-		
+
 		z, i, f, o = np.split(S, 4)
 		Z, I, F, O = sigmoid(z), np.tanh(i), sigmoid(f), sigmoid(o)
 		
@@ -53,9 +54,23 @@ class LSTM(object):
 
 		return Y
 
-	def forget(self):
-		self.prev_c = np.zeros(self.nstates)
-		self.prev_Y = np.zeros(self.nstates)
+	def get_prev_c(self):
+		return self.prev_c
+
+	def get_prev_Y(self):
+		return self.prev_Y
+
+	def get_params(self):
+		return self.W
+
+	def set_prev_c(self, prev_c):
+		self.prev_c = prev_c
+
+	def set_prev_Y(self, prev_Y):
+		self.prev_Y = prev_Y
+
+	def set_params(self, params):
+		self.W = params
 
 
 class Dense(object):
@@ -63,10 +78,17 @@ class Dense(object):
 		self.dinput = dinput
 		self.doutput = doutput
 
-		W = np.random.random((dinput + 1, doutput)) / np.sqrt(dinput + doutput)
+		W = np.random.random((dinput + 1, doutput)) 
+		W /= np.sqrt(dinput + doutput)
 		self.W = W
 
 	
 	def __call__(self, X):
-		V = np.concatenate([X, np.ones(1)])		# things we do for bias
+		V = np.concatenate([X, np.ones(1)])
 		return np.dot(V, self.W)
+
+	def get_params(self):
+		return self.W
+
+	def set_params(self, params):
+		self.W = params
