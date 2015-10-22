@@ -78,8 +78,9 @@ class Dense(object):
 		self.dinput = dinput
 		self.doutput = doutput
 
-		W = np.random.random((dinput + 1, doutput)) 
-		W /= np.sqrt(dinput + doutput)
+		sigma = np.sqrt(6.0 / (doutput + dinput))
+  		W =  np.random.uniform(-sigma, sigma, (dinput + 1, doutput))
+
 		self.W = W
 
 	

@@ -2,7 +2,7 @@
 # Taken form DoctorTeeth on Github
 #
 
-import numpy as np
+import autograd.numpy as np
 
 def l2(x):
 	return np.sqrt(np.sum(np.multiply(x, x)))

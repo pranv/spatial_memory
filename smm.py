@@ -15,28 +15,32 @@ class MemoryStore(object):
 
 	def activate(self, address):
 		# Gaussian
-		return np.ones(self.locations.shape[0])
+		sigma = 0.001
+		mu = address
+		coeff = 1 / (sigma * ((2 * 3.14) ** 0.5))
+		norm = (self.locations - mu) ** 2
+		fac = -np.sum(norm / (2 * (sigma ** 2)), axis=1, keepdims=True)
+		return coeff * np.exp(fac)
 
 	def fetch(self, address):
 		activations = self.activate(address)
 		recall = activations * self.values
 		self.read = np.sum(recall, axis=0)
 
-	def commit(self, address, edits, erase, add):
+	def commit(self, address, erase, add):
 		activations = self.activate(address)
-
 		# create a new memory
 		if np.sum(activations) < self.write_threshold:
 			self.create(address)
 			activations = self.activate(address)
 
 		recall = activations * self.values
-		refresh = self.values * (1 - erase) + add * edits 
+		refresh = self.values * (1 - erase) + add 
 		self.values = self.values * (1 - recall) + recall * refresh
 
 	def create(self, address):
 		self.values = np.concatenate([self.values, np.zeros((1, self.dmemory))])
-		self.locations = np.concatenate([self.addresses, address.reshape(1, -1)])
+		self.locations = np.concatenate([self.locations, address.reshape(1, -1)])
 
 	def get_values(self):
 		return self.values
@@ -56,6 +60,10 @@ class MemoryStore(object):
 	def set_read(self, read):
 		self.read = read
 
+	def clear(self):
+		self.values = np.zeros((1, self.dmemory))
+		self.locations = np.zeros((1, self.daddress))
+
 
 class SpatialMemoryMachine(object):
 	def __init__(self, dmemory, daddress, nstates, dinput, doutput, write_threshold=1e-2):
@@ -65,8 +73,7 @@ class SpatialMemoryMachine(object):
 		self.LOCATION = Dense(nstates, daddress) 
 		self.GATE = Dense(nstates, daddress)
 		self.ERASE = Dense(nstates, dmemory)
-		self.ADD = Dense(nstates, dmemory) 
-		self.EDITS = Dense(nstates, dmemory) 
+		self.ADD = Dense(nstates, dmemory)  
 		self.OUTPUT = Dense(nstates, doutput)
 
 		self.HASH = Dense(dmemory, daddress)
@@ -82,18 +89,27 @@ class SpatialMemoryMachine(object):
 		
 		content_key = self.CONTENT_KEY(H)
 		location = self.LOCATION(H)
-		gate = softmax(self.GATE(H))
-		erase = softmax(self.ERASE(H))
-		add = softmax(self.ADD(H))
-		edits = self.EDITS(H)
-		output = softmax(self.OUTPUT(H))
+
+		gate = sigmoid(self.GATE(H))
+		
+		erase = sigmoid(self.ERASE(H))
+		add = np.tanh(self.ADD(H))
+		
+		output = sigmoid(self.OUTPUT(H))
 		
 		content_address = self.HASH(content_key)
-		address = gate * content_address + (1 - gate) * location
+		address = (1 - gate) * content_address + gate * location
 		
 		self.MEMORY.fetch(address)
-		self.MEMORY.commit(address, edits, erase, add)
+		self.MEMORY.commit(address, erase, add)
 
+		#print '--' * 40
+		#print 'content_key', content_key
+		#print 'location', location
+		#print 'gate', gate #, self.GATE(H) 
+		#print 'erase', erase
+		#print 'add', add
+		#print 'output', output
 		return output
 
 	def get_params(self):
@@ -108,13 +124,8 @@ class SpatialMemoryMachine(object):
 		params['GATE_W'] = self.GATE.get_params()
 		params['ERASE_W'] = self.ERASE.get_params()
 		params['ADD_W'] = self.ADD.get_params()
-		params['EDITS_W'] = self.EDITS.get_params() 
 		params['OUTPUT_W'] = self.OUTPUT.get_params()
 		params['HASH_W'] = self.HASH.get_params()
-
-		params['MEM_VAL'] = self.MEMORY.get_values()
-		params['MEM_LOC'] = self.MEMORY.get_locations()
-		params['MEM_READ'] = self.MEMORY.get_read()
 
 		return params
 
@@ -126,12 +137,10 @@ class SpatialMemoryMachine(object):
 		self.CONTENT_KEY.set_params(params['CONTENT_KEY_W'])
 		self.LOCATION.set_params(params['LOCATION_W'])
 		self.GATE.set_params(params['GATE_W'])
-		self.EDITS.set_params(params['ERASE_W'])
+		self.ERASE.set_params(params['ERASE_W'])
 		self.ADD.set_params(params['ADD_W'])
-		self.EDITS.set_params(params['EDITS_W']) 
 		self.OUTPUT.set_params(params['OUTPUT_W'])
 		self.HASH.set_params(params['HASH_W'])
 
-		self.MEMORY.set_values(params['MEM_VAL'])
-		self.MEMORY.set_locations(params['MEM_LOC'])
-		self.MEMORY.set_read(params['MEM_READ'])
+	def clear(self):
+		self.MEMORY.clear()
