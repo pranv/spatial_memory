@@ -126,33 +126,3 @@ dW = grad(lossfun)
 W = machine.get_params()
 
 gradCheck(W, dW(W), inputs, targets, 10e-4, 10e-4)
-
-
-
-'''
-from smm import *
-from autograd import grad
-
-Ganesha = SpatialMemoryMachine(4, 2, 1)
-
-def loss(X, targets):
-	loss = 0
-	for t in range(X.shape[0]):
-		input = X[t]
-		target = targets[t]
-		
-		Y = Ganesha.forward(X[t])
-
-		one = np.ones(Y.shape)
-        ep = 2**-23
-        loss += target * np.log2(Y + ep) + (one - target) * np.log2(one - Y + ep)
-	
-	return -loss
-
-
-print loss(np.random.randn(5, 1), np.random.randn(5, 1))
-
-g = grad(loss)
-
-print g(np.random.randn(5, 1), np.random.randn(5, 1))
-'''
