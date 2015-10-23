@@ -4,17 +4,19 @@ seqence_length_min = 15
 seqence_length_max = 25
 
 dmemory = vector_size
-daddress = 2
+daddress = 1
 dinput = vector_size + 2
 doutput = vector_size
 nstates = 100
 write_threshold = 1e-3
 sigma = 0.01
 
-lr = 4e-4
-niter = 500
+lr = 1e-4
+niter = 20000
 decay = 0.9
 blend = 0.95
+
+ep = 2e-23
 
 import autograd.numpy as np
 from autograd import grad
@@ -34,8 +36,7 @@ def test(params):
 		input = inputs[t]
 		target = targets[t]
 		output = machine.forward(input, True)
-		ep = 2e-23
-		loss -= np.sum(target * np.log(output + ep) + (1 - target) * np.log(1 - output + ep))
+		loss -= np.sum(target * np.log2(output + ep) + (1 - target) * np.log2(1 - output + ep))
 
 	loss = loss / ((T * 2 + 2) * vector_size)
 	return loss 
@@ -49,8 +50,7 @@ def loss(params):
 		input = inputs[t]
 		target = targets[t]
 		output = machine.forward(input)
-		ep = 2e-23
-		loss -= np.sum(target * np.log(output + ep) + (1 - target) * np.log(1 - output + ep))
+		loss -= np.sum(target * np.log2(output + ep) + (1 - target) * np.log2(1 - output + ep))
 	
 	return loss 
 
@@ -64,7 +64,7 @@ for i in range(niter):
 	optimizer(W, grads)
 	L = test(W) 
 	G = [(grads[g] * grads[g]).sum() / np.prod(grads[g].shape) for g in grads]
-	print '\n\t|', i, '\t|  loss: ', L, '\t|  gradient norm: ', sum(G) / len(G), '\t|'
+	print '\t', i, '\tloss: ', L, '\tgradient norm: ', sum(G) / len(G), '\t'
 
 
 machine.set_params(W)

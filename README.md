@@ -1,2 +1,2 @@
-# spatial_memory
+# Spatial Memory Machine
 Deforming Space for Memory

@@ -66,7 +66,7 @@ class MemoryStore(object):
 
 
 class SpatialMemoryMachine(object):
-	def __init__(self, dmemory, daddress, nstates, dinput, doutput, write_threshold, sigma):
+	def __init__(self, dmemory, daddress, nstates, dinput, doutput, write_threshold=1e-3, sigma=0.01):
 		self.MEMORY = MemoryStore(dmemory, daddress, write_threshold, sigma)
 		self.CONTROLLER = LSTM(dinput + dmemory, nstates)
 		
