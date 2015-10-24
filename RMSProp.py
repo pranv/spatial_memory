@@ -1,7 +1,3 @@
-#
-# Taken form DoctorTeeth on Github
-#
-
 import autograd.numpy as np
 
 def l2(x):
@@ -30,7 +26,7 @@ class RMSProp(object):
 			p = params[k]
 			d = dparams[k]
 
-			d = np.clip(d,-10,10)
+			d = np.clip(d, -1, 1)
 			self.ns[k] = self.b * self.ns[k] + (1 - self.b) * (d*d)
 			self.gs[k] = self.b * self.gs[k] + (1 - self.b) * d
 			n = self.ns[k]
