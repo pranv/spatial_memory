@@ -36,6 +36,8 @@ class LSTM(object):
 
 		self.prev_c = np.zeros(nstates)
 		self.prev_Y = np.zeros(nstates)
+
+		print 'LSTM layer with ', np.prod(W.shape), 'parameters'
 	
 	def __call__(self, X):
 		V = np.concatenate([X, self.prev_Y, np.ones(1)])
@@ -82,6 +84,8 @@ class Dense(object):
   		W =  np.random.uniform(-sigma, sigma, (dinput + 1, doutput))
 
 		self.W = W
+
+		print 'Linear layer with ', np.prod(W.shape), 'parameters'
 
 	
 	def __call__(self, X):

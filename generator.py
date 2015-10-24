@@ -1,9 +1,3 @@
-'''
-	Generate random instances for each of the 5 tasks from the paper.
-
-	Taken form DoctorTeeth on Github
-'''
-
 import autograd.numpy as np
 import itertools
 
