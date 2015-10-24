@@ -73,8 +73,6 @@ class SpatialMemoryMachine(object):
 		self.CONTENT_KEY_R = Dense(nstates, dmemory) 
 		self.LOCATION_R = Dense(nstates, daddress) 
 		self.GATE_R = Dense(nstates, 1)
-		self.ERASE_R = Dense(nstates, dmemory)
-		self.ADD_R = Dense(nstates, dmemory) 
 		self.HASH_R = Dense(dmemory, daddress)
 
 		self.CONTENT_KEY_W = Dense(nstates, dmemory) 
@@ -96,19 +94,19 @@ class SpatialMemoryMachine(object):
 		V = np.concatenate([input, prev_read])
 		H = self.CONTROLLER(V)
 		
-		content_key_r = np.tanh(self.CONTENT_KEY_R(H))
-		location_r = np.tanh(self.LOCATION_R(H))
+		content_key_r = self.CONTENT_KEY_R(H)
+		location_r = self.LOCATION_R(H)
 		gate_r = sigmoid(self.GATE_R(H))
-		content_address_r = np.tanh(self.HASH_R(content_key_r))
+		content_address_r = self.HASH_R(content_key_r)
 		address_r = (1 - gate_r) * content_address_r + gate_r * location_r
 		self.MEMORY.fetch(address_r)
 
-		content_key_w = np.tanh(self.CONTENT_KEY_W(H))
-		location_w = np.tanh(self.LOCATION_W(H))
+		content_key_w = self.CONTENT_KEY_W(H)
+		location_w = self.LOCATION_W(H)
 		gate_w = sigmoid(self.GATE_W(H))
 		erase = sigmoid(self.ERASE_W(H))
-		add = np.tanh(self.ADD_W(H))
-		content_address_w = np.tanh(self.HASH_W(content_key_w))
+		add = self.ADD_W(H)
+		content_address_w = self.HASH_W(content_key_w)
 		address_w = (1 - gate_w) * content_address_w + gate_w * location_w
 		self.MEMORY.commit(address_w, erase, add)
 
@@ -151,8 +149,6 @@ class SpatialMemoryMachine(object):
 		params['CONTENT_KEY_R'] = self.CONTENT_KEY_R.get_params()
 		params['LOCATION_R'] = self.LOCATION_R.get_params()
 		params['GATE_R'] = self.GATE_R.get_params()
-		params['ERASE_R'] = self.ERASE_R.get_params()
-		params['ADD_R'] = self.ADD_R.get_params()
 		params['HASH_R'] = self.HASH_R.get_params()
 
 		params['OUTPUT'] = self.OUTPUT.get_params()
@@ -174,8 +170,6 @@ class SpatialMemoryMachine(object):
 		self.CONTENT_KEY_R.set_params(params['CONTENT_KEY_R'])
 		self.LOCATION_R.set_params(params['LOCATION_R'])
 		self.GATE_R.set_params(params['GATE_R'])
-		self.ERASE_R.set_params(params['ERASE_R'])
-		self.ADD_R.set_params(params['ADD_R'])
 		self.HASH_R.set_params(params['HASH_R'])
 
 		self.OUTPUT.set_params(params['OUTPUT'])
