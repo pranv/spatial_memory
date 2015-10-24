@@ -4,14 +4,14 @@ seqence_length_min = 15
 seqence_length_max = 25
 
 dmemory = vector_size
-daddress = 2
+daddress = 1
 dinput = vector_size + 2
 doutput = vector_size
 nstates = 100
-write_threshold = 1e-3
-sigma = 0.01
+write_threshold = 0.5
+sigma = 0.05
 
-lr = 1e-5
+lr = 1e-4
 niter = 2000
 decay = 0.9
 blend = 0.95
