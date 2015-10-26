@@ -28,7 +28,7 @@ class SpatialMemoryMachine(object):
 
 	def loss(self, inputs, targets):
 		inputs, targets = map(np.array, [inputs, targets])
-		outputs = self.__call__(inputs)
+		outputs = self(inputs)
 		ep = 2e-23
 		loss = -np.sum(targets * np.log2(outputs + ep) + (1 - targets) * np.log2(1 - outputs + ep))
 		return loss
