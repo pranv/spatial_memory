@@ -7,6 +7,9 @@ def sigmoid(X):
 def tanh(X):
 	return np.tanh(X)
 
+def ReLU(X):
+    Y = X + np.sqrt(X * X)
+    return Y / 2
 
 def orthogonalize(n):
     W = np.random.randn(n, n)
@@ -58,7 +61,7 @@ class Dense(object):
 
 
 class LSTM(object):
-	def __init__(self, dinput, nstates, fbias=1.0):
+	def __init__(self, dinput, nstates, fbias=10.0):
 		self.dinput = dinput
 		self.nstates = nstates
 

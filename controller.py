@@ -1,6 +1,6 @@
 import autograd.numpy as np
 from autograd import grad
-from layers import LSTM, Dense, softmax, softplus, sigmoid, tanh
+from layers import LSTM, Dense, softmax, softplus, sigmoid, tanh, ReLU
 
 
 class Controller(object):
@@ -8,44 +8,86 @@ class Controller(object):
 		self.layers = {}
 		self.layers['INPUT'] = Dense(dinput, nstates)
 		self.layers['PREVIOUS_READ'] = Dense(dmemory, nstates)
-		
-		self.layers['CONTROL_KEY'] = LSTM(nstates, nstates)
-		
+		self.layers['CONTROL_KEY'] = LSTM(nstates, nstates + 4 * (daddress + dmemory))
 		self.layers['HASH'] = Dense(dmemory, daddress)
-		
-		self.layers['CONTENT_KEY_R'] = Dense(nstates, dmemory)
-		self.layers['GATE_R'] = Dense(nstates, daddress)
-		self.layers['LOCATION_R'] = Dense(nstates, daddress) 
-		
-		self.layers['CONTENT_KEY_W'] = Dense(nstates, dmemory)
-		self.layers['GATE_W'] = Dense(nstates, daddress)
-		self.layers['LOCATION_W'] = Dense(nstates, daddress) 
-		self.layers['ERASE'] = Dense(nstates, dmemory)
-		self.layers['ADD'] = Dense(nstates, dmemory) 
 		self.layers['OUTPUT'] = Dense(nstates, doutput)
+
+		self.daddress = daddress
+		self.dmemory = dmemory
+
+		# ---x--- OLD ----x----
+		#self.layers['INPUT'] = Dense(dinput, nstates)
+		#self.layers['PREVIOUS_READ'] = Dense(dmemory, nstates)
+		
+		#self.layers['CONTROL_KEY'] = LSTM(nstates, nstates)
+		
+		#self.layers['HASH'] = Dense(dmemory, daddress)
+		
+		#self.layers['CONTENT_KEY_R'] = Dense(nstates, dmemory)
+		#self.layers['GATE_R'] = Dense(nstates, daddress)
+		#self.layers['LOCATION_R'] = Dense(nstates, daddress) 
+		
+		#self.layers['CONTENT_KEY_W'] = Dense(nstates, dmemory)
+		#self.layers['GATE_W'] = Dense(nstates, daddress)
+		#self.layers['LOCATION_W'] = Dense(nstates, daddress) 
+		#self.layers['ERASE'] = Dense(nstates, dmemory)
+		#self.layers['ADD'] = Dense(nstates, dmemory) 
+		#self.layers['OUTPUT'] = Dense(nstates, doutput)
 
 	def __call__(self, input, prev_read):
 		layer = self.layers 	# alias
+		daddress = self.daddress
+		dmemory = self.dmemory
 
 		V = layer['INPUT'](input) + layer['PREVIOUS_READ'](prev_read)
-		C = tanh(layer['CONTROL_KEY'](V))
+		C = layer['CONTROL_KEY'](V)
 
-		content_r = layer['CONTENT_KEY_R'](C)
-		content_w = layer['CONTENT_KEY_W'](C)
+		indx = 0
+		content_r = C[indx:indx+dmemory]
+		indx += dmemory
+		content_w = C[indx:indx+dmemory]
+		indx += dmemory
 
-		loc_r = layer['LOCATION_R'](C)
-		loc_w = layer['LOCATION_W'](C)
+		loc_r = C[indx:indx+daddress]
+		indx += daddress
+		loc_w = C[indx:indx+daddress]
+		indx += daddress
 
-		g_r = layer['GATE_R'](C)
-		g_w = layer['GATE_W'](C)
+		g_r = C[indx:indx+daddress]
+		indx += daddress
+		g_w = C[indx:indx+daddress]
+		indx += daddress
 
-		address_r = g_r * loc_r + (1 - g_r) * layer['HASH'](content_r)
-		address_w = g_w * loc_w + (1 - g_w) * layer['HASH'](content_w)
+		erase = C[indx:indx+dmemory]
+		indx += dmemory
+		add = C[indx:indx+dmemory]
+		indx += dmemory
 
-		erase = layer['ERASE'](C)
-		add = layer['ADD'](C)
+		address_r = loc_r * g_r + (1 - g_r) * tanh(layer['HASH'](content_r))
+		address_w = loc_w * g_w + (1 - g_w) * tanh(layer['HASH'](content_w))
 
-		output = sigmoid(layer['OUTPUT'](C))
+		output = sigmoid(layer['OUTPUT'](C[indx:]))
+
+		# ---x--- OLD ----x----
+		#V = layer['INPUT'](input) + layer['PREVIOUS_READ'](prev_read)
+		#C = layer['CONTROL_KEY'](V)
+
+		#content_r = tanh(layer['CONTENT_KEY_R'](C)) #dmemory
+		#content_w = tanh(layer['CONTENT_KEY_W'](C)) #dmemory
+
+		#loc_r = tanh(layer['LOCATION_R'](C))	#daddress
+		#loc_w = tanh(layer['LOCATION_W'](C))	#daddress
+
+		#g_r = ReLU(layer['GATE_R'](C)) #daddress
+		#g_w = ReLU(layer['GATE_W'](C)) #daddress
+
+		#address_r = loc_r * g_r + (1 - g_r) * tanh(layer['HASH'](content_r))
+		#address_w = loc_w * g_w + (1 - g_w) * tanh(layer['HASH'](content_w))
+
+		#erase = ReLU(layer['ERASE'](C)) #dmemory
+		#add = tanh(layer['ADD'](C))	#dmemory
+
+		#output = sigmoid(layer['OUTPUT'](C))
 
 		return address_r, address_w, erase, add, output
 
