@@ -45,7 +45,7 @@ class Controller(object):
 		erase = layer['ERASE'](C)
 		add = layer['ADD'](C)
 
-		output = layer['OUTPUT'](C)
+		output = sigmoid(layer['OUTPUT'](C))
 
 		return address_r, address_w, erase, add, output
 
