@@ -1,82 +1,63 @@
+import autograd.numpy as np
+import generator
+from autograd import grad
+from machine import SpatialMemoryMachine
+from RMSProp import RMSProp
+
+
+# all hyper parameters
 task = 'copy'
-vector_size = 10
-seqence_length_min = 15
-seqence_length_max = 25
+vector_size = 1
+seqence_length_min = 4
+seqence_length_max = 8
 
 dmemory = vector_size
 daddress = 1
+nstates = 100
 dinput = vector_size + 2
 doutput = vector_size
-nstates = 100
-write_threshold = 0.5
-sigma = 0.05
+init_units = 10
+create_memories = False
+influence_threshold = 0.1
+sigma = 0.01
 
 lr = 1e-4
-niter = 2000
-decay = 0.9
-blend = 0.95
+alpha = 0.95
+momentum = 0.9
+grad_clip = (-10, 10)
 
-ep = 2e-23
-
-import autograd.numpy as np
-from autograd import grad
-from smm import SpatialMemoryMachine
-import generator
-from RMSProp import RMSProp
+niter = 100
+batch_size = 10
+print_every = 10
 
 data = generator.Generator(task, vector_size, seqence_length_min, seqence_length_max)
-machine = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, write_threshold, sigma)
+M = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, init_units, create_memories, influence_threshold, sigma)
 
-def test(params):
-	machine.clear()
-	machine.set_params(params)
+def loss(W):
+	M.clear()
+	M.set_params(W)
 	inputs, targets, T = data.make()
-	loss = 0
-	for t in range(inputs.shape[0]):
-		input = inputs[t]
-		target = targets[t]
-		output = machine.forward(input, True)
-		loss -= np.sum(target * np.log2(output + ep) + (1 - target) * np.log2(1 - output + ep))
-
-	loss = loss / ((T * 2 + 2) * vector_size)
+	loss = M.loss(inputs, targets)
 	return loss 
 
-def loss(params):
-	machine.clear()
-	machine.set_params(params)
-	inputs, targets, T = data.make()
-	loss = 0
-	for t in range(inputs.shape[0]):
-		input = inputs[t]
-		target = targets[t]
-		output = machine.forward(input)
-		loss -= np.sum(target * np.log2(output + ep) + (1 - target) * np.log2(1 - output + ep))
-	
-	return loss 
-
-
+W = M.get_params()
 dW = grad(loss)
-W = machine.get_params()
-optimizer = RMSProp(W, learning_rate=lr, decay=decay, blend=blend)
+optimizer = RMSProp(W, learning_rate=lr, alpha=alpha, momentum=momentum, epsilon=1e-8, grad_clip=grad_clip)
 
+# the training loop
 for i in range(niter):
 	grads = dW(W)
+	for j in range(batch_size - 1):
+		_grads = dW(W)
+		for g in grads:
+			grads[g] += _grads[g]
+
+	for g in grads:
+			grads[g] *= (1.0 / batch_size)
+	
 	optimizer(W, grads)
-	L = test(W) 
-	G = [(grads[g] * grads[g]).sum() / np.prod(grads[g].shape) for g in grads]
-	print '\t', i, '\tloss: ', L, '\tgradient norm: ', sum(G) / len(G), '\t'
-
-
-machine.set_params(W)
-machine.clear()
-inputs, targets, T = data.make()
-outputs = np.zeros_like(targets)
-for t in range(inputs.shape[0]):
-	input = inputs[t]
-	target = targets[t]
-	output = machine.forward(input, True)
-	outputs[t] += output
-	print '----' * 20
-	print input
-	print output
-	print target
+	
+	if i % print_every == 0:
+		L = loss(W) / ((seqence_length_max * 2 + 2) * vector_size)
+		G = [(grads[g] * grads[g]).sum() / np.prod(grads[g].shape) for g in grads]
+		print '\t', i * batch_size, '\tloss: ', L, '\tgradient norm: ', sum(G) / len(G), '\t'
