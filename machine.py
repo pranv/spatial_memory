@@ -13,7 +13,6 @@ class SpatialMemoryMachine(object):
 		self.read0 = np.random.randn(dmemory)
 
 	def __call__(self, inputs):
-		inputs = np.array(inputs)
 		sequence_length = inputs.shape[0]
 		self.read = self.read0
 
