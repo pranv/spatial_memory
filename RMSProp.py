@@ -19,7 +19,7 @@ class RMSProp(object):
 	def __call__(self, W, dW):
 		n, g, delta = self.n, self.g, self.delta
 		for k in W:
-			dW[k] = np.clip(dW, *self.grad_clip)
+			dW[k] = np.clip(dW[k], *self.grad_clip)
 			n[k] *= self.alpha
 			n[k] += (1 - self.alpha) * (dW[k] ** 2)
 			g[k] *= self.alpha
