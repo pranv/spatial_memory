@@ -4,10 +4,10 @@ from controller import Controller
 from memory import Memory
 
 class SpatialMemoryMachine(object):
-	def __init__(self, dmemory, daddress, nstates, dinput, doutput, 
+	def __init__(self, dmemory, daddress, nstates, dinput, doutput, scale, 
 					init_units, create_memories, influence_threshold, sigma):
 
-		self.memory = Memory(dmemory, daddress, init_units, create_memories, influence_threshold, sigma)
+		self.memory = Memory(dmemory, daddress, scale, init_units, create_memories, influence_threshold, sigma)
 		self.controller = Controller(dmemory, daddress, nstates, dinput, doutput)
 		self.doutput = doutput
 		self.read0 = np.random.randn(dmemory)

@@ -1,5 +1,5 @@
 import numpy as np
-import generator
+from utils import generator
 import matplotlib.pyplot as plt
 
 from memory import Memory
@@ -14,27 +14,25 @@ def memIO_test():
 	daddress = 1
 	dinput = vector_size + 2
 	doutput = vector_size
-	nstates = 50
 	influence_threshold = 0.1
+	scale = 10
 	init_units = seqence_length_max
 	sigma = 0.01
 
-	lr = 1e-4
-
-	memory = Memory(dmemory, daddress, init_units, False, influence_threshold, sigma)
+	memory = Memory(dmemory, daddress, scale, init_units, False, influence_threshold, sigma)
 	data = generator.Generator(task, vector_size, seqence_length_min, seqence_length_max)
 
 	inputs, targets, T = data.make()
 	outputs = np.ones_like(targets) * 0.0
 
 	for t in range(1, T + 1):
-		memory.commit(memory.locations[t -1], 1, inputs[t][:-2])
+		memory.commit(memory.locations[t - 1] / scale, 1, inputs[t][:-2])
 		outputs[t] = 0.0
 
 	print '----' * 20
 
 	for t in range(T + 2, (2 * T + 2)):
-		outputs[t] = a = memory.fetch(memory.locations[(t - T - 2)])
+		outputs[t] = memory.fetch(memory.locations[(t - T - 2)] / scale)
 		
 	for t in range(inputs.shape[0]):
 		input = inputs[t]
@@ -52,12 +50,14 @@ def memIO_test():
 	print 'Read Write Operations are clear'
 
 def locations_test():
-	MEM = Memory(dmemory=4, daddress=1, init_units=25, create_memories=True, influence_threshold=0.1, sigma=0.01)
-	address = np.array([[0.2]])
+	MEM = Memory(dmemory=4, daddress=1, scale=100, init_units=25, create_memories=True, influence_threshold=0.1, sigma=0.1)
+	address = np.array([[-0.75]])
 	
 	memory = np.ones((1, 4))
 	MEM.commit(address, erase=0, add=memory)
 	print MEM.values, MEM.locations
+
+	print 'memory activation: ', MEM.activate(address)
 	
 	MEM.commit(address, erase=0, add=memory)
 	print MEM.values, MEM.locations
@@ -70,8 +70,8 @@ def locations_test():
 	MEM.commit(address + 0.5, erase=0, add=memory)
 	print MEM.values, MEM.locations
 
-	locations = np.linspace(-2, 2, 1000)
-	activations = np.array([MEM.activate(locations[i]) for i in range(1000)])
+	locations = np.linspace(-60, 60, 10000)
+	activations = np.array([MEM.activate(locations[i]) for i in range(10000)])
 	print activations.shape
 	plt.ion()
 	plt.plot(locations, activations.sum(axis=1))

@@ -7,9 +7,11 @@ def sigmoid(X):
 def tanh(X):
 	return np.tanh(X)
 
+
 def ReLU(X):
     Y = X + np.sqrt(X * X)
     return Y / 2
+
 
 def orthogonalize(n):
     W = np.random.randn(n, n)
@@ -33,8 +35,8 @@ def gaussian(X, Y, sigma=0.01):
 
 def deccan(X, Y, sigma=0.01):
 	norm = np.sum((X - Y) ** 2, axis=1, keepdims=True)
-	tail = 2 * sigma / (norm + 0.9)
-	return (np.exp(-norm / (2 * (sigma ** 2))) + tail) / (1 + 2 * sigma)
+	tail = sigma / (norm + 0.9)
+	return (np.exp(-norm / (2 * (sigma ** 2))) + tail) / (1 + sigma)
 
 
 class Dense(object):

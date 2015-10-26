@@ -1,8 +1,9 @@
 import autograd.numpy as np
-import generator
 from autograd import grad
+
 from machine import SpatialMemoryMachine
-from RMSProp import RMSProp
+from utils import generator
+from utils.RMSProp import RMSProp
 
 import matplotlib.pyplot as plt
 
@@ -17,10 +18,11 @@ daddress = 1
 nstates = 20
 dinput = vector_size + 2
 doutput = vector_size
+scale = 100
 init_units = 25
 create_memories = False
 influence_threshold = 0.1
-sigma = 0.01
+sigma = 0.1
 
 lr = 1e-4
 alpha = 0.95
@@ -28,11 +30,11 @@ momentum = 0.9
 grad_clip = (-1, 1)
 
 niter = 1000
-batch_size = 100
+batch_size = 100 	# not actual batches. manual summing of gradients
 print_every = 2
 
 data = generator.Generator(task, vector_size, seqence_length_min, seqence_length_max)
-M = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, init_units, create_memories, influence_threshold, sigma)
+M = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, scale, init_units, create_memories, influence_threshold, sigma)
 
 def loss(W):
 	M.set_params(W)
