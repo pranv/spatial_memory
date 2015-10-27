@@ -7,46 +7,66 @@ class Controller(object):
 	def __init__(self, dmemory, daddress, nstates, dinput, doutput):
 		self.layers = {}
 
-		self.layers['INPUT'] = Dense(dinput, nstates)
-		self.layers['PREVIOUS_READ'] = Dense(dmemory, nstates)
+		self.layers['INPUT'] = Dense(dinput, dmemory)
+		self.layers['PREVIOUS_READ'] = Dense(dmemory, dmemory)
+		self.layers['CONTROL_KEY'] = LSTM(dmemory + dmemory, nstates)
+		self.layers['OUTPUT'] = Dense(doutput, doutput)
+
 		
-		self.layers['CONTROL_KEY'] = LSTM(nstates, nstates)
+		self.daddress = daddress
+		self.dmemory = dmemory
+		self.doutput = doutput
+
+
+		#self.layers['INPUT'] = Dense(dinput, nstates)
+		#self.layers['PREVIOUS_READ'] = Dense(dmemory, nstates)
 		
-		self.layers['HASH'] = Dense(dmemory, daddress)
+		#self.layers['CONTROL_KEY'] = LSTM(nstates, nstates)
 		
-		self.layers['CONTENT_KEY_R'] = Dense(nstates, dmemory)
-		self.layers['GATE_R'] = Dense(nstates, daddress)
-		self.layers['LOCATION_R'] = Dense(nstates, daddress) 
+		#self.layers['HASH'] = Dense(dmemory, daddress)
 		
-		self.layers['CONTENT_KEY_W'] = Dense(nstates, dmemory)
-		self.layers['GATE_W'] = Dense(nstates, daddress)
-		self.layers['LOCATION_W'] = Dense(nstates, daddress) 
-		self.layers['ERASE'] = Dense(nstates, dmemory)
-		self.layers['ADD'] = Dense(nstates, dmemory) 
-		self.layers['OUTPUT'] = Dense(nstates, doutput)
+		#self.layers['CONTENT_KEY_R'] = Dense(nstates, dmemory)
+		#self.layers['GATE_R'] = Dense(nstates, daddress)
+		#self.layers['LOCATION_R'] = Dense(nstates, daddress) 
+		
+		#self.layers['CONTENT_KEY_W'] = Dense(nstates, dmemory)
+		#self.layers['GATE_W'] = Dense(nstates, daddress)
+		#self.layers['LOCATION_W'] = Dense(nstates, daddress) 
+		#self.layers['ERASE'] = Dense(nstates, dmemory)
+		#self.layers['ADD'] = Dense(nstates, dmemory) 
+		#self.layers['OUTPUT'] = Dense(nstates, doutput)
 
 	def __call__(self, input, prev_read):
 		layer = self.layers 	# alias
+		daddress = self.daddress
+		dmemory = self.dmemory
 
-		V = layer['INPUT'](input) + layer['PREVIOUS_READ'](prev_read)
-		C = layer['CONTROL_KEY'](V)
+		I = layer['INPUT'](input) 
+		P = layer['PREVIOUS_READ'](prev_read)
+		C = layer['CONTROL_KEY'](np.concatenate([I, P]))
 
-		content_r = tanh(layer['CONTENT_KEY_R'](C)) 
-		content_w = tanh(layer['CONTENT_KEY_W'](C)) 
+		address_r = C[0]
+		address_w = C[1]
+		erase = 1
+		add = I
+		output = sigmoid(layer['OUTPUT'](C[2:2+self.doutput]))
 
-		loc_r = tanh(layer['LOCATION_R'](C))
-		loc_w = tanh(layer['LOCATION_W'](C))
+		#content_r = layer['CONTENT_KEY_R'](C))
+		#content_w = layer['CONTENT_KEY_W'](C))
 
-		g_r = sigmoid(layer['GATE_R'](C))
-		g_w = sigmoid(layer['GATE_W'](C))
+		#loc_r = layer['LOCATION_R'](C)
+		#loc_w = layer['LOCATION_W'](C)
 
-		address_r = loc_r * g_r + (1 - g_r) * tanh(layer['HASH'](content_r))
-		address_w = loc_w * g_w + (1 - g_w) * tanh(layer['HASH'](content_w))
+		#g_r = sigmoid(layer['GATE_R'](C))
+		#g_w = sigmoid(layer['GATE_W'](C))
 
-		erase = sigmoid(layer['ERASE'](C)) 
-		add = tanh(layer['ADD'](C))	
+		#address_r = loc_r * g_r + (1 - g_r) * layer['HASH'](content_r)
+		#address_w = loc_w * g_w + (1 - g_w) * layer['HASH'](content_w)
 
-		output = sigmoid(layer['OUTPUT'](C))
+		#erase = sigmoid(layer['ERASE'](C)) 
+		#add = layer['ADD'](C)
+
+		#output = sigmoid(layer['OUTPUT'](C))
 
 		return address_r, address_w, erase, add, output
 

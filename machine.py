@@ -22,9 +22,9 @@ class SpatialMemoryMachine(object):
 			#print address_r, address_w, erase, add, output
 			self.memory.commit(address_w, erase, add)
 			self.read = self.memory.fetch(address_r)
-			outputs.append(output)
+			outputs.append(output.reshape(1, -1))
 
-		return np.array(outputs)
+		return np.concatenate(outputs, axis=0)
 
 	def loss(self, inputs, targets):
 		inputs, targets = map(np.array, [inputs, targets])
