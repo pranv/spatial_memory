@@ -9,32 +9,31 @@ import matplotlib.pyplot as plt
 
 # all hyper parameters
 task = 'copy'
-vector_size = 2
+vector_size = 10
 seqence_length_min = 10
 seqence_length_max = 20
 
 dmemory = vector_size
 daddress = 1
-nstates = 20
+nstates = 200
 dinput = vector_size + 2
 doutput = vector_size
-scale = 100
-init_units = 25
+init_units = 21
 create_memories = False
 influence_threshold = 0.1
-sigma = 0.1
+sigma = 0.01
 
 lr = 1e-4
 alpha = 0.95
-momentum = 0.9
-grad_clip = (-1, 1)
+momentum = 0.5
+grad_clip = (-10, 10)
 
 niter = 1000
-batch_size = 100 	# not actual batches. manual summing of gradients
-print_every = 2
+batch_size = 5 	# not actual batches. manual summing of gradients
+print_every = 5
 
 data = generator.Generator(task, vector_size, seqence_length_min, seqence_length_max)
-M = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, scale, init_units, create_memories, influence_threshold, sigma)
+M = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, init_units, create_memories, influence_threshold, sigma)
 
 def loss(W):
 	M.set_params(W)

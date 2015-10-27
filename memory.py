@@ -3,18 +3,17 @@ import autograd.numpy as np
 from layers import deccan
 
 class Memory(object):
-	def __init__(self, dmemory, daddress, scale, init_units, create_memories, influence_threshold, sigma):
+	def __init__(self, dmemory, daddress, init_units, create_memories, influence_threshold, sigma):
 		self.init_units = init_units
 		self.create_memories = create_memories
 		self.influence_threshold = influence_threshold
 		self.sigma = sigma
 		self.daddress = daddress
 		self.dmemory = dmemory
-		self.scale = scale
 		self.clear()
 
 	def activate(self, address):
-		return deccan(self.locations, address * self.scale, self.sigma)
+		return deccan(self.locations, address, self.sigma)
 
 	def fetch(self, address):
 		activations = self.activate(address)
@@ -28,7 +27,7 @@ class Memory(object):
 		if self.create_memories:
 			if (np.sum(activations) < self.influence_threshold):
 				self.create(address)
-				activations = self.activate(address * self.scale)
+				activations = self.activate(address)
 
 		refresh = self.values * (1 - erase) + add 
 		self.values = self.values * (1 - activations) + activations * refresh
@@ -51,4 +50,4 @@ class Memory(object):
 
 	def clear(self):
 		self.values = np.random.random((self.init_units, self.dmemory))
-		self.locations = np.ones((self.init_units, self.daddress)) * np.linspace(-1 * self.scale, 10 * self.scale, self.init_units).reshape(self.init_units, 1)
+		self.locations = np.ones((self.init_units, self.daddress)) * np.linspace(-1, 1, self.init_units).reshape(self.init_units, 1)

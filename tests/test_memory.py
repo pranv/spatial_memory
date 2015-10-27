@@ -15,24 +15,23 @@ def memIO_test():
 	dinput = vector_size + 2
 	doutput = vector_size
 	influence_threshold = 0.1
-	scale = 10
 	init_units = seqence_length_max
 	sigma = 0.01
 
-	memory = Memory(dmemory, daddress, scale, init_units, False, influence_threshold, sigma)
+	memory = Memory(dmemory, daddress, init_units, False, influence_threshold, sigma)
 	data = generator.Generator(task, vector_size, seqence_length_min, seqence_length_max)
 
 	inputs, targets, T = data.make()
 	outputs = np.ones_like(targets) * 0.0
 
 	for t in range(1, T + 1):
-		memory.commit(memory.locations[t - 1] / scale, 1, inputs[t][:-2])
+		memory.commit(memory.locations[t - 1], 1, inputs[t][:-2])
 		outputs[t] = 0.0
 
 	print '----' * 20
 
 	for t in range(T + 2, (2 * T + 2)):
-		outputs[t] = memory.fetch(memory.locations[(t - T - 2)] / scale)
+		outputs[t] = memory.fetch(memory.locations[(t - T - 2)])
 		
 	for t in range(inputs.shape[0]):
 		input = inputs[t]
@@ -50,7 +49,7 @@ def memIO_test():
 	print 'Read Write Operations are clear'
 
 def locations_test():
-	MEM = Memory(dmemory=4, daddress=1, scale=100, init_units=25, create_memories=True, influence_threshold=0.1, sigma=0.1)
+	MEM = Memory(dmemory=4, daddress=1, init_units=25, create_memories=True, influence_threshold=0.1, sigma=0.01)
 	address = np.array([[-0.75]])
 	
 	memory = np.ones((1, 4))
