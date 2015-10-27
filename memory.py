@@ -50,4 +50,4 @@ class Memory(object):
 
 	def clear(self):
 		self.values = np.random.random((self.init_units, self.dmemory))
-		self.locations = np.ones((self.init_units, self.daddress)) * np.linspace(-1, 1, self.init_units).reshape(self.init_units, 1)
+		self.locations = np.ones((self.init_units, self.daddress)) * np.linspace(-1, 1, self.init_units).reshape(-1, 1)

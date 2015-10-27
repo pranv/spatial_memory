@@ -49,7 +49,7 @@ def memIO_test():
 	print 'Read Write Operations are clear'
 
 def locations_test():
-	MEM = Memory(dmemory=4, daddress=1, init_units=25, create_memories=True, influence_threshold=0.1, sigma=0.01)
+	MEM = Memory(dmemory=4, daddress=1, init_units=0, create_memories=True, influence_threshold=0.1, sigma=0.001)
 	address = np.array([[-0.75]])
 	
 	memory = np.ones((1, 4))
@@ -69,7 +69,7 @@ def locations_test():
 	MEM.commit(address + 0.5, erase=0, add=memory)
 	print MEM.values, MEM.locations
 
-	locations = np.linspace(-60, 60, 10000)
+	locations = np.linspace(-2, 2, 10000)
 	activations = np.array([MEM.activate(locations[i]) for i in range(10000)])
 	print activations.shape
 	plt.ion()

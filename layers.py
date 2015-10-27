@@ -28,8 +28,7 @@ def gaussian(X, Y, sigma=0.01):
 
 def deccan(X, Y, sigma=0.01):
 	norm = np.sum((X - Y) ** 2, axis=1, keepdims=True)
-	tail = sigma / (norm + 0.9)
-	return (np.exp(-norm / (2 * (sigma ** 2))) + tail) / (1 + sigma)
+	return (np.exp(-norm / (2 * (sigma ** 2))))
 
 
 def orthogonalize(W):
@@ -42,8 +41,7 @@ class Dense(object):
 		self.dinput = dinput
 		self.doutput = doutput
 		
-		sigma = np.sqrt(6.0 / (doutput + dinput))
-  		W = np.random.uniform(-sigma, sigma, (dinput + 1, doutput))
+		W = np.random.random((dinput + 1, doutput)) / np.sqrt(dinput + doutput)
 		self.W = W
 		
 		print 'Linear layer with ', np.prod(W.shape), 'parameters'
@@ -53,10 +51,13 @@ class Dense(object):
 		return np.dot(V, self.W)
 
 	def get_params(self):
-		return (self.W, )
+		return self.W.flatten()
 
 	def set_params(self, params):
-		self.W = params[0]
+		self.W = params.reshape(self.W.shape)
+
+	def clear(self):
+		pass
 
 
 class LSTM(object):
@@ -73,8 +74,8 @@ class LSTM(object):
 		W[-1, 2 * nstates : 3 * nstates] = fbias
 		self.W = W
 
-		self.c0 = np.zeros(nstates)
-		self.Y0 = np.zeros(nstates)
+		self.c0 = np.random.random((nstates))
+		self.Y0 = np.random.random((nstates))
 
 		self.c, self.Y = self.c0, self.Y0 
 
@@ -95,10 +96,15 @@ class LSTM(object):
 		return self.Y
 
 	def get_params(self):
-		return (self.W, self.c0, self.Y0)
+		w, c, y = self.W.flatten(), self.c0.flatten(), self.Y0.flatten()
+		return np.concatenate([w, c, y], axis=1)
 
 	def set_params(self, params):
-		self.W, self.c0, self.Y0 = params
+		nw, nc = np.prod(self.W.shape), np.prod(self.c0.shape)
+		W, c0, Y0 = np.split(params, [nw, nw+nc])
+		self.W = W.reshape(self.W.shape)
+		self.c0 = c0.reshape(self.c0.shape)
+		self.Y0 = Y0.reshape(self.Y0.shape)
 
 	def clear(self):
 		self.c = self.c0
