@@ -12,13 +12,6 @@ def ReLU(X):
     Y = X + np.sqrt(X * X)
     return Y / 2
 
-
-def orthogonalize(n):
-    W = np.random.randn(n, n)
-    u, s, v = np.linalg.svd(W)
-    return u.astype('float32')
-
-
 def softmax(X):
 	n = np.exp(X)
 	return n / np.sum(n)
@@ -39,18 +32,22 @@ def deccan(X, Y, sigma=0.01):
 	return (np.exp(-norm / (2 * (sigma ** 2))) + tail) / (1 + sigma)
 
 
+def orthogonalize(W):
+    u, s, v = np.linalg.svd(W)
+    return u.astype('float32')
+
+
 class Dense(object):
 	def __init__(self, dinput, doutput):
 		self.dinput = dinput
 		self.doutput = doutput
 		
 		sigma = np.sqrt(6.0 / (doutput + dinput))
-  		W =  np.random.uniform(-sigma, sigma, (dinput + 1, doutput))
+  		W = np.random.uniform(-sigma, sigma, (dinput + 1, doutput))
 		self.W = W
 		
 		print 'Linear layer with ', np.prod(W.shape), 'parameters'
 
-	
 	def __call__(self, X):
 		V = np.concatenate([X, np.ones(1)])
 		return np.dot(V, self.W)
@@ -63,15 +60,15 @@ class Dense(object):
 
 
 class LSTM(object):
-	def __init__(self, dinput, nstates, fbias=10.0):
+	def __init__(self, dinput, nstates, fbias=1.0):
 		self.dinput = dinput
 		self.nstates = nstates
 
 		W = np.random.random((dinput + nstates + 1, nstates * 4)) / np.sqrt(dinput + nstates)
-		W[dinput:-1, 0 * nstates : 1 * nstates] = orthogonalize(nstates)
-		W[dinput:-1, 1 * nstates : 2 * nstates] = orthogonalize(nstates)
-		W[dinput:-1, 2 * nstates : 3 * nstates] = orthogonalize(nstates)
-		W[dinput:-1, 3 * nstates : 4 * nstates] = orthogonalize(nstates)
+		W[dinput:-1, 0 * nstates : 1 * nstates] = orthogonalize(W[dinput:-1, 0 * nstates : 1 * nstates])
+		W[dinput:-1, 1 * nstates : 2 * nstates] = orthogonalize(W[dinput:-1, 1 * nstates : 2 * nstates])
+		W[dinput:-1, 2 * nstates : 3 * nstates] = orthogonalize(W[dinput:-1, 2 * nstates : 3 * nstates])
+		W[dinput:-1, 3 * nstates : 4 * nstates] = orthogonalize(W[dinput:-1, 3 * nstates : 4 * nstates])
 		W[-1, :] = 0 
 		W[-1, 2 * nstates : 3 * nstates] = fbias
 		self.W = W

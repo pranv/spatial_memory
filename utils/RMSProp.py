@@ -1,7 +1,7 @@
 import numpy as np
 
 class RMSProp(object):
-	def __init__(self, W, learning_rate=1e-4, alpha=0.95, momentum=0.9, epsilon=1e-8, grad_clip=(-10, 10)):
+	def __init__(self, W, learning_rate=1e-4, alpha=0.95, momentum=0.9, epsilon=1e-4, grad_clip=(-5, 5)):
 		self.lr = learning_rate
 		self.alpha = alpha
 		self.momentum = momentum

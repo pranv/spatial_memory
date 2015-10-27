@@ -19,7 +19,6 @@ class SpatialMemoryMachine(object):
 		outputs = []
 		for t in range(sequence_length):
 			address_r, address_w, erase, add, output = self.controller(inputs[t], self.read)
-			#print address_r, address_w, erase, add, output
 			self.memory.commit(address_w, erase, add)
 			self.read = self.memory.fetch(address_r)
 			outputs.append(output.reshape(1, -1))
