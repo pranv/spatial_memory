@@ -2,6 +2,7 @@ import autograd.numpy as np
 
 from controller import Controller
 from memory import Memory
+from layers import sigmoid
 
 class SpatialMemoryMachine(object):
 	def __init__(self, dmemory, daddress, nstates, dinput, doutput,
@@ -18,10 +19,10 @@ class SpatialMemoryMachine(object):
 
 		outputs = []
 		for t in range(sequence_length):
-			address_r, address_w, erase, add, output = self.controller(inputs[t], self.read)
-			self.memory.commit(address_w, erase, add)
-			self.read = self.memory.fetch(address_r)
-			outputs.append(self.read.reshape(1, -1))
+			address, erase, add = self.controller(inputs[t], self.read)
+			self.memory.commit(address, erase, add)
+			output = self.read = self.memory.fetch(address)
+			outputs.append(sigmoid(output).reshape(1, -1))
 
 		return np.concatenate(outputs, axis=0)
 

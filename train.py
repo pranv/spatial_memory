@@ -14,7 +14,7 @@ seqence_length_max = 20
 
 dmemory = vector_size
 daddress = 1
-nstates = 50
+nstates = 5
 dinput = vector_size + 2
 doutput = vector_size
 init_units = 20
@@ -27,8 +27,8 @@ decay = 0.9
 momentum = 0.9
 grad_clip = (-10, 10)
 
-niter = 1000
-batch_size = 1	# not actual batches. manual summing of gradients
+niter = 10000
+batch_size = 20	# not actual batches. manual summing of gradients
 
 data = generator.Generator(task, vector_size, seqence_length_min, seqence_length_max)
 M = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, init_units, create_memories, influence_threshold, sigma)

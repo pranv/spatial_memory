@@ -49,7 +49,7 @@ def memIO_test():
 	print 'Read Write Operations are clear'
 
 def locations_test():
-	MEM = Memory(dmemory=4, daddress=1, init_units=0, create_memories=True, influence_threshold=0.1, sigma=0.001)
+	MEM = Memory(dmemory=4, daddress=1, init_units=0, create_memories=True, influence_threshold=0.1, sigma=0.01)
 	address = np.array([[-0.75]])
 	
 	memory = np.ones((1, 4))
