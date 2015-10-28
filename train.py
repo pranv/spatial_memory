@@ -3,32 +3,31 @@ from autograd import grad
 
 from machine import SpatialMemoryMachine
 from utils import generator
-
-from climin import RmsProp
+from climin import RmsProp, Adam
 
 # all hyper parameters
 task = 'copy'
-vector_size = 4
+vector_size = 1
 seqence_length_min = 10
 seqence_length_max = 20
 
 dmemory = vector_size
 daddress = 1
-nstates = 5
+nstates = 10
 dinput = vector_size + 2
 doutput = vector_size
-init_units = 20
+init_units = 21
 create_memories = False
-influence_threshold = 0.1
+influence_threshold = 0.01
 sigma = 0.01
 
-lr = 1e-3
-decay = 0.9
-momentum = 0.9
+lr = 1e-4
+decay = 0.5
+momentum = 0.7
 grad_clip = (-10, 10)
 
 niter = 10000
-batch_size = 20	# not actual batches. manual summing of gradients
+batch_size = 1	# not actual batches. manual summing of gradients
 
 data = generator.Generator(task, vector_size, seqence_length_min, seqence_length_max)
 M = SpatialMemoryMachine(dmemory, daddress, nstates, dinput, doutput, init_units, create_memories, influence_threshold, sigma)
@@ -49,7 +48,9 @@ def loss(W):
 W = M.get_params()
 dW = grad(loss)
 
-opt = RmsProp(W, dW, lr, momentum=momentum, decay=decay)
+print loss(W), L
+
+opt = Adam(W, dW)#, lr, momentum=momentum, decay=decay)
 
 for i in opt:
 	print i['n_iter'],  i['n_iter'] * batch_size, 'loss: ', L[0].value

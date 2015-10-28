@@ -12,14 +12,16 @@ class SpatialMemoryMachine(object):
 		self.controller = Controller(dmemory, daddress, nstates, dinput, doutput)
 		self.doutput = doutput
 		self.read0 = np.random.randn(dmemory)
+		self.address0 = np.random.randn(daddress)
 		self.read = self.read0
+		self.address = self.read0
 
 	def __call__(self, inputs):
 		sequence_length = inputs.shape[0]
 
 		outputs = []
 		for t in range(sequence_length):
-			address, erase, add = self.controller(inputs[t], self.read)
+			address, erase, add = self.controller(inputs[t], self.read, self.address)
 			self.memory.commit(address, erase, add)
 			output = self.read = self.memory.fetch(address)
 			outputs.append(sigmoid(output).reshape(1, -1))
@@ -35,14 +37,20 @@ class SpatialMemoryMachine(object):
 
 	def clear(self):
 		self.read = self.read0
+		self.address = self.address0
 		self.memory.clear()
 		self.controller.clear()
 
 	def get_params(self):
 		params = self.controller.get_params()
-		return np.concatenate([params, self.read0.flatten()], axis=1)
+		return np.concatenate([params, self.read0.flatten(), self.address0.flatten()])
 
 	def set_params(self, params):
+		shape_r = self.address0.shape
+		address0 = params[-np.prod(shape_r):]
+		self.address0 = address0.reshape(shape_r)
+		params = params[:-np.prod(shape_r)]
+
 		shape_r = self.read0.shape
 		read0 = params[-np.prod(shape_r):]
 		self.read0 = read0.reshape(shape_r)

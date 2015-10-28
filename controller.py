@@ -6,17 +6,17 @@ from layers import LSTM, Dense, softmax, softplus, sigmoid, tanh, ReLU
 class Controller(object):
 	def __init__(self, dmemory, daddress, nstates, dinput, doutput):
 		self.layers = {}
-		self.layers['CONTROL_KEY'] = LSTM(dinput + dmemory, nstates, 1000.0)
+		self.layers['CONTROL_KEY'] = LSTM(dmemory + daddress, nstates, 1.0)
 		self.layers['LOCATION'] = Dense(nstates, daddress)  
 		self.layers['ERASE'] = Dense(nstates, dmemory)
-		self.layers['ADD'] = Dense(nstates, dmemory) 
+		self.layers['ADD'] = Dense(nstates, dmemory)
+		self.daddress = daddress
 
-
-	def __call__(self, input, prev_read):
+	def __call__(self, input, prev_read, prev_address):
 		layer = self.layers 	# alias
-		C = layer['CONTROL_KEY'](np.concatenate([input, prev_read]))
+		C = layer['CONTROL_KEY'](np.concatenate([prev_read, prev_address]))
 
-		address = tanh(layer['LOCATION'](C))
+		address = layer['LOCATION'](C)[:self.daddress]
 
 		erase = 1 #sigmoid(layer['ERASE'](C)) 
 		add = input[:-2] #tanh(layer['ADD'](C))
@@ -28,7 +28,7 @@ class Controller(object):
 		for layer in self.layers:
 			layer_params = self.layers[layer].get_params()
 			params.append(layer_params)
-		params = np.concatenate(params, axis=1)
+		params = np.concatenate(params)
 		return params
 
 	def set_params(self, params):
