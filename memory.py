@@ -17,7 +17,7 @@ class Memory(object):
 
 	def fetch(self, address):
 		activations = self.activate(address)
-		recall = activations * self.values
+		recall = (activations ** 2) * self.values
 		read = np.sum(recall, axis=0)
 		return read
 
@@ -30,7 +30,7 @@ class Memory(object):
 				activations = self.activate(address)
 
 		refresh = self.values * (1 - erase) + add 
-		self.values = self.values * (1 - activations) + activations * refresh
+		self.values = self.values * (1 - (activations ** 2)) + (activations ** 2) * refresh
 
 	def create(self, address):
 		self.values = np.concatenate([self.values, np.zeros((1, self.dmemory))])

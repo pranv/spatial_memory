@@ -8,18 +8,18 @@ from climin import RmsProp, Adam
 # all hyper parameters
 task = 'copy'
 vector_size = 1
-seqence_length_min = 10
-seqence_length_max = 20
+seqence_length_min = 1
+seqence_length_max = 5
 
 dmemory = vector_size
 daddress = 1
-nstates = 10
+nstates = 100
 dinput = vector_size + 2
 doutput = vector_size
-init_units = 21
+init_units = 5
 create_memories = False
 influence_threshold = 0.01
-sigma = 0.01
+sigma = 0.1
 
 lr = 1e-4
 decay = 0.5
